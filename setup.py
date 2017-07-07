@@ -9,4 +9,5 @@ setup (
 	author_email = 'andre.j.michell2@gmail.com',
 	url = 'https://github.com/nbgallery/ordo',
 	keywords = ['nbgallery', 'Jupyter', 'grading'],
+	package_data = {'ordo': ['ordo.js'],},
 )
