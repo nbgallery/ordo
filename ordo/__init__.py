@@ -1,6 +1,6 @@
 def _jupyter_nbextension_paths():
   return [{
       'section': "notebook",
-      'src': "static",
+      'src': "",
       'dest': "ordo",
       'require': 'ordo/ordo'}]
