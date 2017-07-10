@@ -23,7 +23,7 @@ define(['jquery', 'base/js/namespace', 'base/js/events'], function($, Jupyter, e
               }
             }
 						//html.append(feedback);
-            cell.output_area.append_output({
+            data.cell.output_area.append_output({
               "output_type" : "display_data",
               "data" : {
                 "text/html": feedback
