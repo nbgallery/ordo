@@ -13,67 +13,89 @@ define(['jquery', 'base/js/namespace', 'base/js/events'], function($, Jupyter, e
 	 * 			if result incorrect:
 	 * 				append the failure message
 	 */
-  var feedback = function () {
-    events.on('output_appended.OutputArea', function(event,type,result,md,html) {
-			events.on('finished_execute.CodeCell', function(evt, data){
-        solution = data.cell.metadata.ordo_solution;
-        if (solution != undefined) {
-          if (html.parent().parent().children().toArray().length == 1) {
-            if (solution == result) {
-              if (data.cell.metadata.ordo_success == undefined) {
-                feedback = "<p class='ordo_feedback' style='color:green'><b>Correct!</b></p>"
-              } else {
-                feedback = "<p class='ordo_feedback' style='color:green'><b>" + data.cell.metadata.ordo_success + "</b></p>"
-              }
-            } else {
-              if (data.cell.metadata.ordo_failure == undefined) {
-                feedback = "<p class='ordo_feedback' style='color:red'><b>Incorrect.</b></p>"
-              } else {
-                feedback = "<p class='ordo_feedback' style='color:red'><b>" + data.cell.metadata.ordo_failure + "</b></p>"
-              }
-            }
-            data.cell.output_area.append_output({
-              "output_type" : "display_data",
-              "data" : {
-                "text/html": feedback
-              },
-              "metadata" : {}
-            });
-          }
-        }
+	var feedback = function () {
+		events.on('output_appended.OutputArea', function(event,type,result,md,html) {
+			events.on('finished_execute.CodeCell', function(evt, obj){
+				solution = obj.cell.metadata.ordo_solution;
+				if (solution != undefined) {
+					if (html.parent().parent().children().toArray().length == 1) {
+						if (JSON.stringify(solution) == JSON.stringify(obj.cell.output_area.outputs[0].data)) {
+							if (obj.cell.metadata.ordo_success == undefined) {
+								feedback = "<p class='ordo_feedback' style='color:green'><b>Correct!</b></p>"
+							} else {
+								feedback = "<p class='ordo_feedback' style='color:green'><b>" + obj.cell.metadata.ordo_success + "</b></p>"
+							}
+						} else {
+							if (obj.cell.metadata.ordo_failure == undefined) {
+								feedback = "<p class='ordo_feedback' style='color:red'><b>Incorrect.</b></p>"
+							} else {
+								feedback = "<p class='ordo_feedback' style='color:red'><b>" + obj.cell.metadata.ordo_failure + "</b></p>"
+							}
+						}
+						obj.cell.output_area.append_output({
+							"output_type" : "display_data",
+							"data" : {
+								"text/html": feedback
+							},
+							"metadata" : {}
+						});
+					}
+				}
 			});
-    });
-  }
+		});
+	}
 	/* makeOutputButton
 	 *	Capture select cell event for the cell data
 	 *	check cell type is code
 	 *	if true:
-	 *		check output_area.outputs is non-empty
+	 *		check the cell is the same as the formerly selected cell
 	 *		if true:
-	 *			make ordo_solution = output_area.outputs[0]
+	 *			return with no action
 	 *		if false:
-	 *			execute cell
-	 *			make ordo_solution = output_area.outputs[0]
+	 *			Remove the button from the formerly selected cell
+	 *			check if the cell has been run already
+	 *			if true:
+	 *				append a button for the user to click which will:
+	 *				make ordo_solution = output_area.outputs[0]
 	 */
 	var makeOutputButton = function () {
+		var currCell = undefined;
 		events.on('select.Cell', function(event, data) {
-			if(data.cell.cell_type == "code") {
-				if(data.cell.output_area.outputs.length != 0) {
-					console.log("executed code cell");
-					console.log(data);
-				} else {
-					console.log("unexecuted code cell");
-					console.log(data);
-				}
+			newCell = data.cell;
+			if(newCell == currCell){
+				return;
 			} else {
-				console.log(data.cell.cell_type);
-				console.log(data);
+				$(".make-ordo-solution").remove();
+				currCell = newCell;
+				if(currCell.cell_type == "code") {
+					if(currCell.output_area.outputs[0].output_type == "execute_result") {
+						$(".selected .output_area").first().append("<button type='button' class='btn btn-primary make-ordo-solution'>make solution</button>");
+						$(".make-ordo-solution").on("click", function() {
+							console.log("updated metadata");
+							currCell.metadata.ordo_solution = currCell.output_area.outputs[0].data;
+						});
+					}
+				}
 			}
-		});
+		});	
 	}
 	var allOutputsButton = function () {
 		var myFunc = function () {
-			alert('I am going to make all outputs into solutions.');
+			cells = Jupyter.notebook.get_cells();
+			for(i=0;i < cells.length;i++) {
+				if(cells[i].cell_type == "code") {
+					if(cells[i].output_area != undefined) {
+						if(cells[i].output_area.outputs.length > 0) {
+							if(cells[i].output_area.outputs[0].output_type == "execute_result") {
+								cells[i].metadata.ordo_solution = cells[i].output_area.outputs[0].data
+							  console.log("updated metadata");
+								//console.log(cells[i].output_area.outputs[0].data);
+								//console.log(cells[i].metadata.ordo_solution);
+							}
+						}
+					}
+				}
+			}
 		};
 		var action = {
 			icon: 'fa-lightbulb-o',
@@ -86,9 +108,12 @@ define(['jquery', 'base/js/namespace', 'base/js/events'], function($, Jupyter, e
 		var full_action_name = Jupyter.actions.register(action, action_name,prefix);
 		Jupyter.toolbar.add_buttons_group([full_action_name]);
 	}
+	var allFuncs = function() {
+		feedback();
+		makeOutputButton();
+		allOutputsButton();
+	}
 	return {
-		load_ipython_extension: feedback,
-		load_ipython_extension: makeOutputButton
-	//load_ipython_extension: allOutputsButton
+		load_ipython_extension: allFuncs
 	}
 });
