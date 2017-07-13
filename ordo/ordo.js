@@ -19,7 +19,8 @@ define(['jquery', 'base/js/namespace', 'base/js/events'], function($, Jupyter, e
         solution = obj.cell.metadata.ordo_solution;
         if (solution != undefined) {
           if (html.parent().parent().children().toArray().length == 1) {
-            if (JSON.stringify(solution) == JSON.stringify(obj.cell.output_area.outputs[0].data)) {
+            if(eqauls(solution,obj.cell.output_area.outputs[0].data)) {
+            //if (JSON.stringify(solution) == JSON.stringify(obj.cell.output_area.outputs[0].data)) {
               if (obj.cell.metadata.ordo_success == undefined) {
                 feedback = "<p class='ordo_feedback' style='color:green'><b>Correct!</b></p>"
               } else {
@@ -43,6 +44,25 @@ define(['jquery', 'base/js/namespace', 'base/js/events'], function($, Jupyter, e
         }
       });
     });
+  }
+  var eqauls = function(obj1, obj2) {
+    for(var p in obj1){
+      if(obj1.hasOwnProperty(p) !== obj2.hasOwnProperty(p)) return false;
+      switch(typeof(obj1[p])) {
+        case 'object':
+          if(!eqauls(obj1[p],obj2[p])) return false;
+          break;
+        case 'function':
+          if(typeof(obj2[p]) == undefined || (p != eqauls && obj1[p].toString() != obj2[p].toString())) return false;
+          break;
+        default:
+          if(obj1[p] != obj2[p]) return false;
+      }
+    }
+    for(var p in obj2) {
+      if(typeof(obj1[p]) == undefined) return false;
+    }
+    return true;
   }
   /* makeOutputButton
    *  Capture select cell event for the cell data
@@ -68,7 +88,7 @@ define(['jquery', 'base/js/namespace', 'base/js/events'], function($, Jupyter, e
         $(".make-ordo-solution").remove();
         currCell = newCell;
         if(currCell.cell_type == "code") {
-          if(currCell.output_area.outputs.length > 0) {
+          if(currCell.output_area.outputs.length > 0){
             if(currCell.output_area.outputs[0].output_type == "execute_result") {
               $(".selected .output_area").first().append("<button type='button' class='btn btn-primary make-ordo-solution'>make solution</button>");
               $(".make-ordo-solution").on("click", function() {
