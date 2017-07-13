@@ -1,4 +1,12 @@
-define(['jquery', 'base/js/namespace', 'base/js/events'], function($, Jupyter, events) {
+define([
+  'jquery',
+  'base/js/namespace',
+  'base/js/events'
+],  function(
+  $,
+  Jupyter,
+  events
+) {
   console.log("...Ordo loaded... grading capabilities initiated");
   /* feedback
    *  Capture output_appended.OutputArea event for the result value
@@ -84,6 +92,8 @@ define(['jquery', 'base/js/namespace', 'base/js/events'], function($, Jupyter, e
       newCell = data.cell;
       if(newCell == currCell){
         return;
+      } else if($('.ordo_feedback_mode').length > 0) {
+        return;
       } else {
         $(".make-ordo-solution").remove();
         currCell = newCell;
@@ -101,7 +111,7 @@ define(['jquery', 'base/js/namespace', 'base/js/events'], function($, Jupyter, e
       }
     }); 
   }
-  var allOutputsButton = function () {
+  var allOutputsButton = function() {
     var myFunc = function () {
       cells = Jupyter.notebook.get_cells();
       for(i=0;i < cells.length;i++) {
@@ -128,12 +138,85 @@ define(['jquery', 'base/js/namespace', 'base/js/events'], function($, Jupyter, e
     var prefix = 'allOutputsButton';
     var action_name = 'show-button';
     var full_action_name = Jupyter.actions.register(action, action_name,prefix);
-    Jupyter.toolbar.add_buttons_group([full_action_name]);
+    if($("[data-jupyter-action*='allOutputsButton']").length == 0) {
+      Jupyter.toolbar.add_buttons_group([full_action_name]);
+    }
+  }
+  var ordoEditFeedbackToggle = function() {
+    var editMode = function() {
+      $('.command_mode').removeClass('ordo_feedback_mode');
+      $('.command_mode').addClass('ordo_edit_mode');
+      $("[data-jupyter-action*='feedbackToggle']").removeClass('active');
+      $("[data-jupyter-action*='editModeToggle']").addClass('active');
+      makeOutputButton();
+      allOutputsButton();
+    };
+    var eMaction = {
+      icon: 'fa-pencil',
+      help: 'Enter ordo-edit mode',
+      help_index: 'zy',
+      handler: editMode
+    };
+    var eMprefix = 'editModeToggle';
+    var eMaction_name = 'EnterEditMode';
+    var eM_action_name = Jupyter.actions.register(eMaction, eMaction_name, eMprefix);
+    var feedbackMode = function() {
+      $('.command_mode').removeClass('ordo_edit_mode');
+      $('.command_mode').addClass('ordo_feedback_mode');
+      $("[data-jupyter-action*='editModeToggle']").removeClass('active');
+      $("[data-jupyter-action*='feedbackToggle']").addClass('active');
+      $("[data-jupyter-action*='allOutputsButton']").remove();
+    };
+    var fMaction = {
+      icon: 'fa-check',
+      help: 'Enter feedback-only mode',
+      help_index: 'zx',
+      handler: feedbackMode
+    };
+    var fMprefix = 'feedbackToggle';
+    var fMaction_name = 'EnterFeedbackMode';
+    var fM_action_name = Jupyter.actions.register(fMaction, fMaction_name, fMprefix);
+    Jupyter.toolbar.add_buttons_group([fM_action_name,eM_action_name])
+    $('.command_mode').addClass('ordo_feedback_mode');
+    $("[data-jupyter-action*='feedbackToggle']").addClass('active');
+  }
+  var addSolutionButton = function() {
+    output_types = [
+      'application/javascript',
+      'text/html',
+      'text/markdown',
+      'text/latex',
+      'image/svg+xml',
+      'image/png',
+      'image/jpeg',
+      'application/pdf',
+      'text/plain'
+    ];
+    var currCell = undefined;
+    events.on('select.Cell', function(event, data) {
+      newCell = data.cell;
+      if(newCell == currCell){
+        return;
+      } else if($('.ordo_feedback_mode').length > 0) {
+        return;
+      } else {
+        $(".add-ordo-solution").remove();
+        currCell = newCell;
+        if(currCell.cell_type == "code") {
+          $(".selected > .output_wrapper .output").append("<button type='button' class='btn btn-primary btn-block add-ordo-solution'>add solution</button>");
+          $(".add-ordo-solution").on("click", function() {
+            console.log("adding metadata");
+            currCell.metadata.ordo_solution = "solution added";
+          });
+        }
+      }
+    }); 
   }
   var allFuncs = function() {
     feedback();
     makeOutputButton();
-    allOutputsButton();
+    addSolutionButton();
+    ordoEditFeedbackToggle();
   }
   return {
     load_ipython_extension: allFuncs
