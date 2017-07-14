@@ -4,7 +4,7 @@ define([
   'base/js/events'
 ],  function(
   $,
-  Jupyter,
+  jupyter,
   events
 ) {
   console.log("...Ordo loaded... grading capabilities initiated");
@@ -113,7 +113,7 @@ define([
   }
   var allOutputsButton = function() {
     var myFunc = function () {
-      cells = Jupyter.notebook.get_cells();
+      cells = jupyter.notebook.get_cells();
       for(i=0;i < cells.length;i++) {
         if(cells[i].cell_type == "code") {
           if(cells[i].output_area != undefined) {
@@ -137,9 +137,9 @@ define([
     };
     var prefix = 'allOutputsButton';
     var action_name = 'show-button';
-    var full_action_name = Jupyter.actions.register(action, action_name,prefix);
+    var full_action_name = jupyter.actions.register(action, action_name,prefix);
     if($("[data-jupyter-action*='allOutputsButton']").length == 0) {
-      Jupyter.toolbar.add_buttons_group([full_action_name]);
+      jupyter.toolbar.add_buttons_group([full_action_name]);
     }
   }
   var ordoEditFeedbackToggle = function() {
@@ -159,7 +159,7 @@ define([
     };
     var eMprefix = 'editModeToggle';
     var eMaction_name = 'EnterEditMode';
-    var eM_action_name = Jupyter.actions.register(eMaction, eMaction_name, eMprefix);
+    var eM_action_name = jupyter.actions.register(eMaction, eMaction_name, eMprefix);
     var feedbackMode = function() {
       $('.command_mode').removeClass('ordo_edit_mode');
       $('.command_mode').addClass('ordo_feedback_mode');
@@ -175,8 +175,8 @@ define([
     };
     var fMprefix = 'feedbackToggle';
     var fMaction_name = 'EnterFeedbackMode';
-    var fM_action_name = Jupyter.actions.register(fMaction, fMaction_name, fMprefix);
-    Jupyter.toolbar.add_buttons_group([fM_action_name,eM_action_name])
+    var fM_action_name = jupyter.actions.register(fMaction, fMaction_name, fMprefix);
+    jupyter.toolbar.add_buttons_group([fM_action_name,eM_action_name])
     $('.command_mode').addClass('ordo_feedback_mode');
     $("[data-jupyter-action*='feedbackToggle']").addClass('active');
   }
@@ -200,13 +200,34 @@ define([
       } else if($('.ordo_feedback_mode').length > 0) {
         return;
       } else {
-        $(".add-ordo-solution").remove();
+        $(".ordo-user-input").remove();
         currCell = newCell;
         if(currCell.cell_type == "code") {
-          $(".selected > .output_wrapper .output").append("<button type='button' class='btn btn-primary btn-block add-ordo-solution'>add solution</button>");
-          $(".add-ordo-solution").on("click", function() {
-            console.log("adding metadata");
-            currCell.metadata.ordo_solution = "solution added";
+          $(".selected > .output_wrapper .output").append(
+            "<div class='btn-group col-sm-offset-4 ordo-user-input' role='group' aria-label='author input values'>" +
+              "<button type='button' class='btn btn-default ordo-add-solution'>add solution</button>" +
+              "<button type='button' class='btn btn-default ordo-add-success-msg'>add success response</button>" +
+              "<button type='button' class='btn btn-default ordo-add-failure-msg'>add failure response</button>" +
+            "</div>"
+          );
+          $(".ordo-add-solution").on("click", function() {
+            $(".ordo-user-input").remove();
+            $(".selected > .output_wrapper .output").append(
+              "<div class='col-sm-6 col-sm-offset-3 ordo-user-input'>" +
+                "<div class='input-group'>" +
+                  "<div class='input-group-btn'>" +
+                    "<button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown'>" +
+                      "text/plain" +
+                    "</button>" +
+                  "</div>" +
+                  "<input type='text' class='form-control' placeholder='Insert solution here!'>" +
+                "</div>" +
+              "</div>"
+            );
+            //currCell.metadata.ordo_solution = {
+            //  "text/plain": i
+            //};
+            //console.log("adding metadata");
           });
         }
       }
