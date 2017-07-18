@@ -121,8 +121,6 @@ define([
               if(cells[i].output_area.outputs[0].output_type == "execute_result") {
                 cells[i].metadata.ordo_solution = cells[i].output_area.outputs[0].data
                 console.log("updated metadata");
-                //console.log(cells[i].output_area.outputs[0].data);
-                //console.log(cells[i].metadata.ordo_solution);
               }
             }
           }
@@ -160,12 +158,15 @@ define([
     var eMprefix = 'editModeToggle';
     var eMaction_name = 'EnterEditMode';
     var eM_action_name = jupyter.actions.register(eMaction, eMaction_name, eMprefix);
+
     var feedbackMode = function() {
       $('.command_mode').removeClass('ordo_edit_mode');
       $('.command_mode').addClass('ordo_feedback_mode');
       $("[data-jupyter-action*='editModeToggle']").removeClass('active');
       $("[data-jupyter-action*='feedbackToggle']").addClass('active');
       $("[data-jupyter-action*='allOutputsButton']").remove();
+      $(".make-ordo-solution").remove();
+      $(".ordo-user-input").remove();
     };
     var fMaction = {
       icon: 'fa-check',
@@ -180,18 +181,7 @@ define([
     $('.command_mode').addClass('ordo_feedback_mode');
     $("[data-jupyter-action*='feedbackToggle']").addClass('active');
   }
-  var addSolutionButton = function() {
-    output_types = [
-      'application/javascript',
-      'text/html',
-      'text/markdown',
-      'text/latex',
-      'image/svg+xml',
-      'image/png',
-      'image/jpeg',
-      'application/pdf',
-      'text/plain'
-    ];
+  var editMetadataButtons = function() {
     var currCell = undefined;
     events.on('select.Cell', function(event, data) {
       newCell = data.cell;
@@ -203,43 +193,71 @@ define([
         $(".ordo-user-input").remove();
         currCell = newCell;
         if(currCell.cell_type == "code") {
-          $(".selected > .output_wrapper .output").append(
-            "<div class='btn-group col-sm-offset-4 ordo-user-input' role='group' aria-label='author input values'>" +
-              "<button type='button' class='btn btn-default ordo-add-solution'>add solution</button>" +
-              "<button type='button' class='btn btn-default ordo-add-success-msg'>add success response</button>" +
-              "<button type='button' class='btn btn-default ordo-add-failure-msg'>add failure response</button>" +
-            "</div>"
-          );
-          $(".ordo-add-solution").on("click", function() {
-            $(".ordo-user-input").remove();
-            $(".selected > .output_wrapper .output").append(
-              "<div class='col-sm-6 col-sm-offset-3 ordo-user-input'>" +
-                "<div class='input-group'>" +
-                  "<div class='input-group-btn'>" +
-                    "<button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown'>" +
-                      "text/plain" +
-                    "</button>" +
-                  "</div>" +
-                  "<input type='text' class='form-control' placeholder='Insert solution here!'>" +
-                "</div>" +
-              "</div>"
-            );
-            //currCell.metadata.ordo_solution = {
-            //  "text/plain": i
-            //};
-            //console.log("adding metadata");
+          $(".selected > .output_wrapper .output").append(ordoEditButtons);
+          $('#editMetadata_modal').on("show.bs.modal", function(event) {
+            editModal(event, $(this))
           });
         }
       }
     }); 
   }
-  var allFuncs = function() {
+  var ordoEditButtons = "<div class='btn-group col-sm-offset-4 ordo-user-input' role='group' aria-label='author input values'>" +
+      "<button type='button' class='btn btn-default ordo-add-solution' data-toggle='modal' data-target='#editMetadata_modal' data-field='ordo_solution'>add solution</button>" +
+      "<button type='button' class='btn btn-default ordo-add-success-msg' data-toggle='modal' data-target='#editMetadata_modal' data-field='ordo_success'>add success response</button>" +
+      "<button type='button' class='btn btn-default ordo-add-failure-msg' data-toggle='modal' data-target='#editMetadata_modal' data-field='ordo_failure'>add failure response</button>" +
+    "</div>"
+  var makeModal = function() {
+    editMetadata_modal = '<div class="modal fade" id="editMetadata_modal" tabindex="-1" role="dialog">' +
+      '<div class="modal-dialog" role="document">' + 
+        '<div class="modal-content">' +
+          '<div class="modal-header">' +
+            '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+            '<h4 class="modal-title">Modal title</h4>' +
+          '</div>' +
+          '<div class="modal-body">' +
+            '<p>One fine body&hellip;</p>' +
+          '</div>' +
+          '<div class="modal-footer">' +
+            '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>' +
+            '<button type="button" class="btn btn-primary" data-dismiss="modal">Save Solution</button>'+ 
+          '</div>'+ 
+        '</div>'+
+      '</div>'+
+    '</div>';
+
+    output_types = [
+      'application/javascript',
+      'text/html',
+      'text/markdown',
+      'text/latex',
+      'image/svg+xml',
+      'image/png',
+      'image/jpeg',
+      'application/pdf',
+      'text/plain'
+    ];
+    return editMetadata_modal;
+  }
+  var editModal = function(event, modal) {
+    var button = $(event.relatedTarget)
+    var editField = button.data('field')
+
+    if(editField == 'ordo_solution') {
+      modal.find('.modal-title').text('Add a new solution')
+      modal.find('.modal-body > p').text('The input will eventually go here.')
+    } else {
+      modal.find('.modal-title').text('Add a new custom message.')
+      modal.find('.modal-body > p').text('The input box will eventually go here.')
+    }
+  }
+  var ordo_exts = function() {
     feedback();
     makeOutputButton();
-    addSolutionButton();
+    editMetadataButtons();
+    $(".notebook_app").append(makeModal());
     ordoEditFeedbackToggle();
   }
   return {
-    load_ipython_extension: allFuncs
+    load_ipython_extension: ordo_exts
   }
 });
