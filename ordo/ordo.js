@@ -23,25 +23,16 @@ define([
    *      if result incorrect:
    *        append the failure message
    */
-  var feedback = function () {
+  var ordoFeedback = function () {
     events.on('output_appended.OutputArea', function(event,type,result,md,html) {
       events.on('finished_execute.CodeCell', function(evt, obj){
         solution = obj.cell.metadata.ordo_solution;
         if (solution != undefined) {
           if (html.parent().parent().children().toArray().length == 1) {
-            if(eqauls(solution,obj.cell.output_area.outputs[0].data)) {
-            //if (JSON.stringify(solution) == JSON.stringify(obj.cell.output_area.outputs[0].data)) {
-              if (obj.cell.metadata.ordo_success == undefined) {
-                feedback = "<p class='ordo_feedback' style='color:green'><b>Correct!</b></p>"
-              } else {
-                feedback = "<p class='ordo_feedback' style='color:green'><b>" + obj.cell.metadata.ordo_success + "</b></p>"
-              }
+            if(obj.cell.metadata.ordo_verify == undefined) {
+              feedback = ordoFeedbackMessage(eqauls(solution,obj.cell.output_area.outputs[0].data), obj.cell.metadata.ordo_success, obj.cell.metadata.ordo_failure);
             } else {
-              if (obj.cell.metadata.ordo_failure == undefined) {
-                feedback = "<p class='ordo_feedback' style='color:red'><b>Incorrect.</b></p>"
-              } else {
-                feedback = "<p class='ordo_feedback' style='color:red'><b>" + obj.cell.metadata.ordo_failure + "</b></p>"
-              }
+              feedback = obj.cell.metadata.ordo_verify(obj.cell.output_area.outputs[0].data, obj.cell.metadata.ordo_success, obj.cell.metadata.ordo_failure);
             }
             obj.cell.output_area.append_output({
               "output_type" : "display_data",
@@ -54,6 +45,22 @@ define([
         }
       });
     });
+  }
+  var ordoFeedbackMessage =  function(correct,success_msg,failure_msg) {
+    if(correct) {
+      if (success_msg == undefined) {
+        feedback = "<div class='alert alert-success alert-dismissible ordo_feedback' role='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button><strong>Well Done!</strong> That was the correct response.</div>"
+      } else {
+        feedback = "<div class='alert alert-success alert-dismissible ordo_feedback' role='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button><strong>" + success_msg  + "</strong> That was the correct response.</div>"
+      }
+    } else {
+      if (failure_msg == undefined) {
+        feedback = "<div class='alert alert-danger alert-dismissible ordo_feedback' role='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button><strong>Oh no!</strong> That wasn't quite right.</div>"
+      } else {
+        feedback = "<div class='alert alert-danger alert-dismissible ordo_feedback' role='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button><strong>" + failure_msg  + "</strong> That wasn't quite right.</div>"
+      }
+    }
+    return feedback;
   }
   var eqauls = function(obj1, obj2) {
     for(var p in obj1){
@@ -366,10 +373,9 @@ define([
   }
 
   var ordo_exts = function() {
-    feedback();
+    ordoFeedback();
     makeOutputButton();
     editMetadataButtons();
-    //$(".notebook_app").append(editorModal);
     ordoEditFeedbackToggle();
   }
   return {
