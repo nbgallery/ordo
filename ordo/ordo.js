@@ -1,11 +1,13 @@
 define([
   'jquery',
   'base/js/namespace',
-  'base/js/events'
+  'base/js/events',
+  'base/js/dialog'
 ],  function(
   $,
-  jupyter,
-  events
+  Jupyter,
+  events,
+  dialog
 ) {
   console.log("...Ordo loaded... grading capabilities initiated");
   /* feedback
@@ -113,7 +115,7 @@ define([
   }
   var allOutputsButton = function() {
     var myFunc = function () {
-      cells = jupyter.notebook.get_cells();
+      cells = Jupyter.notebook.get_cells();
       for(i=0;i < cells.length;i++) {
         if(cells[i].cell_type == "code") {
           if(cells[i].output_area != undefined) {
@@ -135,9 +137,9 @@ define([
     };
     var prefix = 'allOutputsButton';
     var action_name = 'show-button';
-    var full_action_name = jupyter.actions.register(action, action_name,prefix);
+    var full_action_name = Jupyter.actions.register(action, action_name,prefix);
     if($("[data-jupyter-action*='allOutputsButton']").length == 0) {
-      jupyter.toolbar.add_buttons_group([full_action_name]);
+      Jupyter.toolbar.add_buttons_group([full_action_name]);
     }
   }
   var ordoEditFeedbackToggle = function() {
@@ -157,7 +159,7 @@ define([
     };
     var eMprefix = 'editModeToggle';
     var eMaction_name = 'EnterEditMode';
-    var eM_action_name = jupyter.actions.register(eMaction, eMaction_name, eMprefix);
+    var eM_action_name = Jupyter.actions.register(eMaction, eMaction_name, eMprefix);
 
     var feedbackMode = function() {
       $('.command_mode').removeClass('ordo_edit_mode');
@@ -176,8 +178,8 @@ define([
     };
     var fMprefix = 'feedbackToggle';
     var fMaction_name = 'EnterFeedbackMode';
-    var fM_action_name = jupyter.actions.register(fMaction, fMaction_name, fMprefix);
-    jupyter.toolbar.add_buttons_group([fM_action_name,eM_action_name])
+    var fM_action_name = Jupyter.actions.register(fMaction, fMaction_name, fMprefix);
+    Jupyter.toolbar.add_buttons_group([fM_action_name,eM_action_name])
     $('.command_mode').addClass('ordo_feedback_mode');
     $("[data-jupyter-action*='feedbackToggle']").addClass('active');
   }
@@ -195,17 +197,20 @@ define([
         if(currCell.cell_type == "code") {
           $(".selected > .output_wrapper .output").append(ordoEditButtons);
           $(".ordo-add-solution").on('click', function(event) {
-            $('.ordo-user-input').remove()
-            $(".selected > .output_wrapper .output").append(makeSolutionInputArea());
-          });
-          $('#editMetadata_modal').on("show.bs.modal", function(event) {
-            $('.notebook_app').addClass('modal-open')
-            $('.modal-body').focus()
-            editEditorModal(event, $(this))
-          });
-          $('#editMetadata_modal').on("hide.bs.modal", function(event) {
-            resetEditorModal(event, $(this))
-            $('.notebook_app').removeClass('modal-open')
+            dialog.modal({
+              'title': 'Add Solution',
+              'body': makeSolutionInputArea(),
+              'buttons': {
+                'Cancel': {},
+                'Save New Solution': {
+                  'id': 'ordo-add-solution',
+                  'class': 'btn-primary'
+                },
+              },
+              'keyboard_manager': Jupyter.notebook.keyboard_manager,
+              'notebook': Jupyter.notebook
+            })
+          //  $('#ordo-add-solution').on('click', function())
           });
         }
       }
@@ -216,39 +221,7 @@ define([
       "<button type='button' class='btn btn-default ordo-add-success-msg' data-toggle='modal' data-target='#editMetadata_modal' data-field='ordo_success'>add success response</button>" +
       "<button type='button' class='btn btn-default ordo-add-failure-msg' data-toggle='modal' data-target='#editMetadata_modal' data-field='ordo_failure'>add failure response</button>" +
     "</div>"
-  var editorModal = '<div class="modal fade" id="editMetadata_modal" tabindex="-1" role="dialog">' +
-      '<div class="modal-dialog">' + 
-        '<div class="modal-content">' +
-          '<div class="modal-header">' +
-            '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
-            '<h4 class="modal-title">Modal title</h4>' +
-          '</div>' +
-          '<div class="modal-body">' +
-            '<p>Text belongs here&hellip;</p>' +
-          '</div>' +
-          '<div class="modal-footer">' +
-            '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>' +
-            '<button type="button" class="btn btn-primary" data-dismiss="modal">Save Solution</button>'+ 
-          '</div>'+ 
-        '</div>'+
-      '</div>'+
-    '</div>'
-  var resetEditorModal = function(event, modal) {
-    modal.find('.input-area').remove();
-  }
-  var editEditorModal = function(event, modal) {
-    var button = $(event.relatedTarget)
-    var editField = button.data('field')
 
-    if(editField == 'ordo_solution') {
-      modal.find('.modal-title').text('Add a new solution')
-      modal.find('.modal-body > p').text('You can create your expected solution below.')
-      modal.find('.modal-body').append(makeSolutionInputArea())
-    } else {
-      modal.find('.modal-title').text('Add a new custom message.')
-      modal.find('.modal-body > p').text('The input box will eventually go here.')
-    }
-  }
   var makeSolutionInputArea = function() {
     var output_types = [
       'text/plain',
@@ -262,40 +235,29 @@ define([
       'application/pdf'
     ]
     
-    $form = $('<form />', {
-      'class': "form-inline input-area"
-    })
-
     $sel = $('<select />', {
-      'class': "form-control",
+      'class': "form-control solution_type",
       'id': "output_type"
     })
     $.each(output_types, function(index, type) {
       $sel.append("<option>" + type + "</option>")
     })
-    
-    $ta = $('<textarea />', {
-      'class': 'form-control',
-      'id': 'solution_text_area',
-      'rows': '1'
-    })
 
-    $btns = $('<div />', {
-      'class': 'btn-group'
-    })
-    $('<button />', {
-      'class': 'btn btn-default cancel-input',
-      'text': 'Cancel'
-    }).appendTo($btns)
-    $('<button />', {
-      'class': 'btn btn-primary save-input',
-      'text': 'Save'
-    }).appendTo($btns)
+    var inputArea = $('<div />', {
+      'title': 'Solution Input Area'
+    }).append(
+      $('<form />', {
+        'class': "form-inline"
+      }).append($sel).append(
+        $('<textarea />', {
+          'class': 'form-control',
+          'id': 'solution_text_area',
+          'rows': '2'
+        })
+      )
+    )
 
-    $sel.appendTo($form);
-    $ta.appendTo($form);
-    $btns.appendTo($form);
-    return $form;
+    return inputArea;
   }
 
   var ordo_exts = function() {
