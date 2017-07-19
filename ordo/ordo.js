@@ -203,25 +203,119 @@ define([
               'buttons': {
                 'Cancel': {},
                 'Save New Solution': {
-                  'id': 'ordo-add-solution',
-                  'class': 'btn-primary'
+                  'id': 'save-solution-btn',
+                  'class': 'btn-primary',
+                  'click': function() {
+                    sol = {}
+                    sol[$('#output_type').val()] = $('#solution_text_area').val()
+                    Jupyter.notebook.get_selected_cell().metadata.ordo_solution = sol
+                  }
                 },
               },
               'keyboard_manager': Jupyter.notebook.keyboard_manager,
               'notebook': Jupyter.notebook
             })
-          //  $('#ordo-add-solution').on('click', function())
+          });
+          $(".ordo-add-success-msg").on('click', function(event) {
+            dialog.modal({
+              'title': 'Add Success Message',
+              'body': makeMessageInputArea(),
+              'buttons': {
+                'Cancel': {},
+                'Save New Message': {
+                  'id': 'save-success-msg-btn',
+                  'class': 'btn-primary',
+                  'click': function() {
+                    if($('#styling').val() == "bold") {
+                      sol = "<b>" + $('#message_text_area').val() + "</b>"
+                    } else {
+                      sol = $('#message_text_area').val() 
+                    }
+                    Jupyter.notebook.get_selected_cell().metadata.ordo_success = sol
+                  }
+                },
+              },
+              'keyboard_manager': Jupyter.notebook.keyboard_manager,
+              'notebook': Jupyter.notebook
+            })
+          });
+          $(".ordo-add-failure-msg").on('click', function(event) {
+            dialog.modal({
+              'title': 'Add Failure Message',
+              'body': makeMessageInputArea(),
+              'buttons': {
+                'Cancel': {},
+                'Save New Message': {
+                  'id': 'save-failure-msg-btn',
+                  'class': 'btn-primary',
+                  'click': function() {
+                    if($('#styling').val() == "bold") {
+                      sol = "<b>" + $('#message_text_area').val() + "</b>"
+                    } else {
+                      sol = $('#message_text_area').val() 
+                    }
+                    Jupyter.notebook.get_selected_cell().metadata.ordo_failure = sol
+                  }
+                },
+              },
+              'keyboard_manager': Jupyter.notebook.keyboard_manager,
+              'notebook': Jupyter.notebook
+            })
           });
         }
       }
     }); 
   }
   var ordoEditButtons = "<div class='btn-group col-sm-offset-4 ordo-user-input' role='group' aria-label='author input values'>" +
-      "<button type='button' class='btn btn-default ordo-add-solution' data-toggle='modal' data-target='#editMetadata_modal' data-field='ordo_solution'>add solution</button>" +
-      "<button type='button' class='btn btn-default ordo-add-success-msg' data-toggle='modal' data-target='#editMetadata_modal' data-field='ordo_success'>add success response</button>" +
-      "<button type='button' class='btn btn-default ordo-add-failure-msg' data-toggle='modal' data-target='#editMetadata_modal' data-field='ordo_failure'>add failure response</button>" +
+      "<button type='button' class='btn btn-default ordo-add-solution' data-field='ordo_solution'>add solution</button>" +
+      "<button type='button' class='btn btn-default ordo-add-success-msg' data-field='ordo_success'>add success response</button>" +
+      "<button type='button' class='btn btn-default ordo-add-failure-msg' data-field='ordo_failure'>add failure response</button>" +
     "</div>"
+  
+  var makeMessageInputArea = function() {
+    var styles= [
+      'bold',
+      'plain text'
+    ]
+    
+    $sel = $('<select />', {
+      'class': "form-control",
+      'id': "styling",
+      'title': 'Select the styling for the following text'
+    })
+    $.each(styles, function(index, type) {
+      $sel.append("<option>" + type + "</option>")
+    })
 
+    var inputArea = $('<div />', {
+      'class': 'inputArea'
+    }).append(
+      $('<div />', {
+        'title': 'Message Input Area'
+      }).append(
+        $('<form />', {
+          'class': "form-inline"
+        }).append($sel).append(
+          $('<textarea />', {
+            'class': 'form-control',
+            'id': 'message_text_area',
+            'rows': '2',
+            'style': 'width:65%',
+            'title': 'Input text here!'
+          })).append(
+          $('<button />', {
+            'class': 'btn btn-default add-field',
+            'title': 'Add another field'
+          }).append(
+            $('<span />', {
+              'class': 'fa fa-plus'
+            })
+          )
+        )
+      )
+    ) 
+    return inputArea;
+  }
   var makeSolutionInputArea = function() {
     var output_types = [
       'text/plain',
@@ -237,7 +331,8 @@ define([
     
     $sel = $('<select />', {
       'class': "form-control solution_type",
-      'id': "output_type"
+      'id': "output_type",
+      'title': 'Select the output type'
     })
     $.each(output_types, function(index, type) {
       $sel.append("<option>" + type + "</option>")
@@ -250,10 +345,20 @@ define([
         'class': "form-inline"
       }).append($sel).append(
         $('<textarea />', {
-          'class': 'form-control',
+          'class': 'form-control solution_text_area',
           'id': 'solution_text_area',
-          'rows': '2'
-        })
+          'rows': '2',
+          'style': 'width:65%',
+          'title': 'Input text here!'
+        })).append(
+        $('<button />', {
+          'class': 'btn btn-default',
+          'title': 'Add another field'
+        }).append(
+          $('<span />', {
+            'class': 'fa fa-plus'
+          })
+        )
       )
     )
 
