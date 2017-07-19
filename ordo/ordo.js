@@ -51,13 +51,13 @@ define([
       if (success_msg == undefined) {
         feedback = "<div class='alert alert-success alert-dismissible ordo_feedback' role='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button><strong>Well Done!</strong> That was the correct response.</div>"
       } else {
-        feedback = "<div class='alert alert-success alert-dismissible ordo_feedback' role='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button><strong>" + success_msg  + "</strong> That was the correct response.</div>"
+        feedback = "<div class='alert alert-success alert-dismissible ordo_feedback' role='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button>" + success_msg  + "</div>"
       }
     } else {
       if (failure_msg == undefined) {
         feedback = "<div class='alert alert-danger alert-dismissible ordo_feedback' role='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button><strong>Oh no!</strong> That wasn't quite right.</div>"
       } else {
-        feedback = "<div class='alert alert-danger alert-dismissible ordo_feedback' role='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button><strong>" + failure_msg  + "</strong> That wasn't quite right.</div>"
+        feedback = "<div class='alert alert-danger alert-dismissible ordo_feedback' role='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button>" + failure_msg  + "</div>"
       }
     }
     return feedback;
