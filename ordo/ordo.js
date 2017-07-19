@@ -282,7 +282,8 @@ define([
   var makeMessageInputArea = function() {
     var styles= [
       'bold',
-      'plain text'
+      'plain text',
+      'html'
     ]
     
     $sel = $('<select />', {
@@ -302,25 +303,31 @@ define([
       }).append(
         $('<form />', {
           'class': "form-inline"
-        }).append($sel).append(
-          $('<textarea />', {
-            'class': 'form-control',
-            'id': 'message_text_area',
-            'rows': '2',
-            'style': 'width:65%',
-            'title': 'Input text here!'
-          })).append(
-          $('<button />', {
-            'class': 'btn btn-default add-field',
-            'title': 'Add another field'
-          }).append(
-            $('<span />', {
-              'class': 'fa fa-plus'
-            })
-          )
+        }).append($sel)
+          .append(
+            $('<textarea />', {
+              'class': 'form-control',
+              'id': 'message_text_area',
+              'rows': '2',
+              'style': 'width:70%',
+              'title': 'Input text here!'
+            }))
+            .append(
+              $('<button />', {
+                'class': 'btn btn-default add-field',
+                'title': 'Add another field'
+              }).append(
+                $('<span />', {
+                  'class': 'fa fa-plus'
+                })
+              )
+            )
+          .append($('<p />', {
+            'class': 'form-text text-muted',
+            'text': 'When html is selected, users may format their message using html as desired.'
+          }))
         )
-      )
-    ) 
+      ) 
     return inputArea;
   }
   var makeSolutionInputArea = function() {
