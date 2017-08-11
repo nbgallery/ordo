@@ -101,7 +101,7 @@ define([
       newCell = data.cell;
       if(newCell == currCell){
         return;
-      } else if($('.ordo_feedback_mode').length > 0) {
+      } else if($('.ordo_edit_mode').length == 0) {
         return;
       } else {
         $(".make-ordo-solution").remove();
@@ -196,7 +196,7 @@ define([
       newCell = data.cell;
       if(newCell == currCell){
         return;
-      } else if($('.ordo_feedback_mode').length > 0) {
+      } else if($('.ordo_edit_mode').length == 0) {
         return;
       } else {
         $(".ordo-user-input").remove();
