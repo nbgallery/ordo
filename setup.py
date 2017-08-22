@@ -3,7 +3,7 @@ from distutils.core import setup
 setup (
 	name = 'ordo',
 	packages = ['ordo'],
-	version = '0.3.1',
+	version = '0.3.2',
 	description = 'A lightweight feedback tool for Jupyter',
 	author = 'Andre J. Michell',
 	author_email = 'andre.j.michell2@gmail.com',
