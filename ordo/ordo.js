@@ -10,6 +10,23 @@ define([
 	dialog
 ) {
 	console.log("...Ordo loaded... grading capabilities initiated");
+	var defaultSuccess = "";
+	var defaultFailure = "";
+
+	var readConfig = function() {
+		var config = Jupyter.notebook.config;
+		console.log(config);
+
+		if (config.data.hasOwnProperty('ordo_default_failure')){
+			console.log("Found: " + config.data['ordo_default_failure'])
+			defaultFailure = config.data['ordo_default_failure'];
+		}
+		if (config.data.hasOwnProperty('ordo_default_success')){
+			console.log("Found: " + config.data['ordo_default_success'])
+			defaultSuccess = config.data['ordo_default_success'];
+		}
+	};
+
 	/* feedback
 	 *  Capture output_appended.OutputArea event for the result value
 	 *  Capture finished_execute.CodeCell event for the data value
@@ -30,9 +47,13 @@ define([
 				if (solution != undefined) {
 					if (html.parent().parent().children().toArray().length == 1) {
 						if(obj.cell.metadata.ordo_verify == undefined) {
-							feedback = ordoFeedbackMessage(eqauls(solution,obj.cell.output_area.outputs[0].data), obj.cell.metadata.ordo_success, obj.cell.metadata.ordo_failure);
+							feedback = ordoFeedbackMessage(equals(solution,obj.cell.output_area.outputs[0].data),
+																  obj.cell.metadata.ordo_success, 
+																  obj.cell.metadata.ordo_failure);
 						} else {
-							feedback = obj.cell.metadata.ordo_verify(obj.cell.output_area.outputs[0].data, obj.cell.metadata.ordo_success, obj.cell.metadata.ordo_failure);
+							feedback = obj.cell.metadata.ordo_verify(obj.cell.output_area.outputs[0].data, 
+																	 obj.cell.metadata.ordo_success, 
+																	 obj.cell.metadata.ordo_failure);
 						}
 						obj.cell.output_area.append_output({
 							"output_type" : "display_data",
@@ -46,31 +67,60 @@ define([
 			});
 		});
 	}
+
+	/**
+	 * returns the div containing the 
+	 * @param {bool} correct - if the submitted solutions was correct or not
+	 * @param {string} success_msg - the success message for the current cell, if defined
+	 * @param {string} failure_msg - the failure message for the current cell, if defined 
+	 */
 	var ordoFeedbackMessage =  function(correct,success_msg,failure_msg) {
 		if(correct) {
-			if (success_msg == undefined) {
-				feedback = "<div class='alert alert-success alert-dismissible ordo_feedback' role='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button><strong>Well Done!</strong> That was the correct response.</div>"
+			if (success_msg == undefined && defaultSuccess == "") {
+				feedback = "<div class='alert alert-success alert-dismissible ordo_feedback' role='alert'> " + 
+						   "<button type='button' class='close' data-dismiss='alert'>&times;</button> " + 
+						   "<strong>Well Done!</strong> That was the correct response. " + 
+						   " </div>"
+			} else if (success_msg == undefined && defaultSuccess) {
+				feedback = "<div class='alert alert-success alert-dismissible ordo_feedback' role='alert'> " + 
+						   "<button type='button' class='close' data-dismiss='alert'>&times;</button>" + 
+						   defaultSuccess + 
+						   "</div>"
 			} else {
-				feedback = "<div class='alert alert-success alert-dismissible ordo_feedback' role='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button>" + success_msg  + "</div>"
+				feedback = "<div class='alert alert-success alert-dismissible ordo_feedback' role='alert'> " + 
+						   "<button type='button' class='close' data-dismiss='alert'>&times;</button>" + 
+						   success_msg + 
+						   "</div>"
 			}
 		} else {
 			if (failure_msg == undefined) {
-				feedback = "<div class='alert alert-danger alert-dismissible ordo_feedback' role='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button><strong>Oh no!</strong> That wasn't quite right.</div>"
+				feedback = "<div class='alert alert-danger alert-dismissible ordo_feedback' role='alert'> " + 
+						   "<button type='button' class='close' data-dismiss='alert'>&times;</button> " + 
+						   "<strong>Oh no!</strong> That wasn't quite right. " + 
+						   "</div>"
+			} else if (failure_msg == undefined && defaultFailure) {
+				feedback = "<div class='alert alert-danger alert-dismissible ordo_feedback' role='alert'> " +
+						   "<button type='button' class='close' data-dismiss='alert'>&times;</button>" +
+						   defaultFailure + 
+						   "</div>"
 			} else {
-				feedback = "<div class='alert alert-danger alert-dismissible ordo_feedback' role='alert'><button type='button' class='close' data-dismiss='alert'>&times;</button>" + failure_msg  + "</div>"
+				feedback = "<div class='alert alert-danger alert-dismissible ordo_feedback' role='alert'>" + 
+						   "<button type='button' class='close' data-dismiss='alert'>&times;</button>" + 
+						   failure_msg  + 
+						   "</div>"
 			}
 		}
 		return feedback;
 	}
-	var eqauls = function(obj1, obj2) {
+	var equals = function(obj1, obj2) {
 		for(var p in obj1){
 			if(obj1.hasOwnProperty(p) !== obj2.hasOwnProperty(p)) return false;
 			switch(typeof(obj1[p])) {
 				case 'object':
-					if(!eqauls(obj1[p],obj2[p])) return false;
+					if(!equals(obj1[p],obj2[p])) return false;
 					break;
 				case 'function':
-					if(typeof(obj2[p]) == undefined || (p != eqauls && obj1[p].toString() != obj2[p].toString())) return false;
+					if(typeof(obj2[p]) == undefined || (p != equals && obj1[p].toString() != obj2[p].toString())) return false;
 					break;
 				default:
 					if(obj1[p] != obj2[p]) return false;
@@ -446,6 +496,7 @@ define([
 	}
 
 	var ordo_exts = function() {
+		readConfig();
 		ordoFeedback();
 		makeOutputButton();
 		showSolutionButton();
