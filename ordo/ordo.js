@@ -168,7 +168,9 @@ define([
 				if(currCell.cell_type == "code") {
 					if(currCell.output_area.outputs.length > 0){
 						if(currCell.output_area.outputs[0].output_type == "execute_result") {
-							$(".selected .output_area").first().append("<button type='button' class='btn btn-primary make-ordo-solution'>make solution</button>");
+							$(".selected .output_area")
+							.first()
+							.append("<button type='button' class='btn btn-primary make-ordo-solution'>make solution</button>");
 							$(".make-ordo-solution").on("click", function() {
 								console.log("updated metadata");
 								currCell.metadata.ordo_solution = currCell.output_area.outputs[0].data;
@@ -220,15 +222,16 @@ define([
 				if(currCell.cell_type == "code") {
 					if(currCell.output_area.outputs.length > 0){
 						if(currCell.output_area.outputs[0].output_type == "execute_result") {
-							$(".selected .output_area").first().append("<button type='button' class='btn fa fa-eye show-ordo-solution'></button>");
+							$(".selected .output_area")
+							.first()
+							.append("<button type='button' class='btn fa fa-eye show-ordo-solution'></button>");
 							$(".show-ordo-solution").on("click", function() {
 								//currCell.metadata.ordo_solution = currCell.output_area.outputs[0].data;
 								solution = solutionToString(currCell.metadata.ordo_solution)
 								console.log("Current solution => " + solution);
 								feedback = "<div class='alert alert-info alert-dismissible show-ordo-solution' role='alert'>" + 
 												   "<button type='button' class='close' data-dismiss='alert'>&times;</button> " + 
-												   "<span class='fa fa-eye' aria-hidden='true'></span> " +
-												solution  + " </div>"
+												   "<stron> Solution is: </strong>" + solution  + " </div>"
 								currCell.output_area.append_output({
 									"output_type" : "display_data",
 									"data" : {
