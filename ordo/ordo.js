@@ -13,21 +13,23 @@ define([
 	var defaultSuccess = "";
 	var defaultFailure = "";
 
+	/**
+	 * reads configuration properties containing default feedback responses for the plugin
+	 */
 	var readConfig = function() {
 		var config = Jupyter.notebook.config;
-		console.log(config);
 
 		if (config.data.hasOwnProperty('ordo_default_failure')){
-			console.log("Found: " + config.data['ordo_default_failure'])
+			console.log("Found: ordo_default_failure property")
 			defaultFailure = config.data['ordo_default_failure'];
 		}
 		if (config.data.hasOwnProperty('ordo_default_success')){
-			console.log("Found: " + config.data['ordo_default_success'])
+			console.log("Found: ordo_default_success")
 			defaultSuccess = config.data['ordo_default_success'];
 		}
 	};
 
-	/* feedback
+	/**
 	 *  Capture output_appended.OutputArea event for the result value
 	 *  Capture finished_execute.CodeCell event for the data value
 	 *  check for a solution in cell metadata
@@ -70,7 +72,7 @@ define([
 
 	/**
 	 * returns the div containing the 
-	 * @param {bool} correct - if the submitted solutions was correct or not
+	 * @param {boolean} correct - if the submitted solutions was correct or not
 	 * @param {string} success_msg - the success message for the current cell, if defined
 	 * @param {string} failure_msg - the failure message for the current cell, if defined 
 	 */
@@ -112,6 +114,12 @@ define([
 		}
 		return feedback;
 	}
+
+	/**
+	 * tests two metadata objects for equality
+	 * @param {Object} obj1 
+	 * @param {Object} obj2 
+	 */
 	var equals = function(obj1, obj2) {
 		for(var p in obj1){
 			if(obj1.hasOwnProperty(p) !== obj2.hasOwnProperty(p)) return false;
@@ -131,7 +139,7 @@ define([
 		}
 		return true;
 	}
-	/* makeOutputButton
+	/** 
 	 *  Capture select cell event for the cell data
 	 *  check cell type is code
 	 *  if true:
@@ -173,7 +181,7 @@ define([
 	}
 
 	/**
-	 * solutionToString
+	 * @param {Object} solution - 
 	 * returns the correct solution in the appropriate format
 	 */
 	var solutionToString = function (solution) {
@@ -195,7 +203,7 @@ define([
 	}
 
 	/**
-	 * showSolutionButton
+	 * 
 	 * creates a button to show the current solution to the user
 	 */
 	var showSolutionButton = function () {
@@ -236,6 +244,9 @@ define([
 		}); 
 	}
 	
+	/**
+	 * sets the solution for the current cell to be the solution for all cells in the notebook
+	 */
 	var allOutputsButton = function() {
 		var myFunc = function () {
 			cells = Jupyter.notebook.get_cells();
@@ -265,6 +276,10 @@ define([
 			Jupyter.toolbar.add_buttons_group([full_action_name]);
 		}
 	}
+
+	/**
+	 * toggles the cell mode between editing/creating solutions and giving feedback
+	 */
 	var ordoEditFeedbackToggle = function() {
 		var editMode = function() {
 			$('.command_mode').removeClass('ordo_feedback_mode');
@@ -306,6 +321,10 @@ define([
 		$('.command_mode').addClass('ordo_feedback_mode');
 		$("[data-jupyter-action*='feedbackToggle']").addClass('active');
 	}
+
+	/**
+	 * creates the buttons and handles the functionality related to editing a solution
+	 */
 	var editMetadataButtons = function() {
 		var currCell = undefined;
 		events.on('select.Cell', function(event, data) {
@@ -389,12 +408,20 @@ define([
 			}
 		}); 
 	}
-	var ordoEditButtons = "<div class='btn-group col-md-offset-1 ordo-user-input' role='group' aria-label='author input values'>" +
+
+	/**
+	 * html for the feedback buttons on a cell
+	 */
+	var ordoEditButtons = 
+			"<div class='btn-group col-md-offset-1 ordo-user-input' role='group' aria-label='author input values'>" +
 			"<button type='button' title='add solution' class='btn btn-default fa fa-plus ordo-add-solution' data-field='ordo_solution'> Solution </button>" +
 			"<button type='button' title='add success message' class='btn btn-success fa fa-thumbs-o-up ordo-add-success-msg' data-field='ordo_success'> Message </button>" +
 			"<button type='button' title='add failure message' class='btn btn-danger fa fa-thumbs-down ordo-add-failure-msg' data-field='ordo_failure'> Message </button>" +
-		"</div>"
+		"</div>";
 	
+	/**
+	 * html for the input box to create a feedback message
+	 */
 	var makeMessageInputArea = function() {
 		var styles= [
 			'bold',
@@ -446,6 +473,10 @@ define([
 			) 
 		return inputArea;
 	}
+
+	/**
+	 * html for the input form to create a solution
+	 */
 	var makeSolutionInputArea = function() {
 		var output_types = [
 			'text/plain',
