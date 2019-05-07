@@ -1,9 +1,9 @@
-from distutils.core import setup
+from setuptools import setup
 
 setup (
 	name = 'ordo',
 	packages = ['ordo'],
-	version = '0.3.2',
+	version = '0.3.3',
 	description = 'A lightweight feedback tool for Jupyter',
 	author = 'Andre J. Michell',
 	author_email = 'andre.j.michell2@gmail.com',
