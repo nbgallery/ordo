@@ -219,7 +219,7 @@ define([
 			} else {
 				$(".show-ordo-solution").remove();
 				currCell = newCell;
-				if(currCell.cell_type == "code") {
+				if(currCell.cell_type == "code" && currCell.metadata && currCell.metadata.ordo_solution) {
 					if(currCell.output_area.outputs.length > 0){
 						if(currCell.output_area.outputs[0].output_type == "execute_result") {
 							$(".selected .output_area")
